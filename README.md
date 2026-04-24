@@ -41,7 +41,7 @@ Coordinates: `LevelRankFile` — e.g. `Ae2` = Level A, Rank 2, File e.
 
 | Finding | Detail |
 |---------|--------|
-| "GAME READY" splash after NEW GAME | `vibium click` on canvas fails ("element is obscured") — must use `vibium eval 'document.querySelector("canvas").click()'` |
+| "GAME READY" splash after NEW GAME | `vibium click` on canvas fails ("element is obscured"). `canvas.click()` may return null without effect. Use `canvas.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — reliably returns `true` |
 | Auto-promote setting | Settings panel has an AUTO PROMOTE toggle (default OFF); enable it at game start to skip promotion dialogs |
 | Promotion dialog buttons | Button index 7 = ♛Queen; use `dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — plain `.click()` doesn't work |
 | Default camera angle | ~135° — arrow keys are diagonal by default; rotate to 180° before navigating |
@@ -52,8 +52,10 @@ Coordinates: `LevelRankFile` — e.g. `Ae2` = Level A, Rank 2, File e.
 | All keys post-selection | `vibium press <key> canvas` deselects the piece — every navigation key after selection must use `vibium eval` with `canvas.focus()` |
 | Cursor moves freely after selection | After selecting, cursor navigates to any square; deselection only happens when Space (confirm) is pressed on an invalid destination |
 | Confirm on friendly piece | Lands on own piece → that piece gets re-selected instead of moving; MOVES count stays the same |
+| Unicorn starting positions | White: Be1 (Level B, Rank 1, File e). Black: **De5** (Level D, Rank 5, File e) — confirmed |
 | Unicorn Ad2 blocked at game start | Level A rank 2 has White pawns on all files — unicorn from Be1 must go to Cd2 (PageUp) not Ad2 (PageDown) |
-| Unicorn VALID MOVES: 3 | Third move from Be1 is likely Bd2 (same-level 2D diagonal), suggesting this implementation includes same-level diagonal movement |
+| Unicorn includes same-level diagonals | From corner (Be1/De5): VALID MOVES: 3. From center (Cd2/Cd4): VALID MOVES: **9** — confirms this variant's unicorn moves on same-level 2D diagonals too |
+| Unicorn capture confirmed | Unicorn can capture opponent pieces: Black Cd4 → De3 captured White unicorn (Level+1, Rank-1, File+1 ✓) |
 | Queen cross-level diagonal | Aa5 → Ea1 is valid (4 levels + 4 ranks along file a = confirmed long-range diagonal capture) |
 | React fiber | Returns 'not found' — use only `vibium text` for state |
 

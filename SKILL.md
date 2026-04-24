@@ -17,11 +17,11 @@ description: Play 3D chess (5×5×5 Raumschach) at testtrack.org/3d-chess using 
 vibium go https://testtrack.org/3d-chess
 vibium find text "NEW GAME" && vibium click @e1 && vibium sleep 800
 # Game shows "GAME READY - Click anywhere to begin" — activate with JS:
-vibium eval 'document.querySelector("canvas").click()' && vibium sleep 800
+vibium eval 'document.querySelector("canvas").dispatchEvent(new MouseEvent("click",{"bubbles":true,"cancelable":true,"view":window}))' && vibium sleep 800
 vibium text  # should show PLAYER: WHITE, MOVES: 0
 ```
 
-**Critical**: After clicking NEW GAME the game shows a "GAME READY" splash. `vibium click` on the canvas fails ("element is obscured") — use `canvas.click()` via eval instead.
+**Critical**: After clicking NEW GAME the game shows a "GAME READY" splash. `vibium click` on the canvas fails ("element is obscured"). `canvas.click()` via eval may return null without effect. Use `dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — this reliably returns `true` and dismisses the splash.
 
 ---
 
@@ -173,17 +173,19 @@ vibium text
 #   rank 4→4, file c→d  = 315° (overshot — rotate back)
 ```
 
-### Rotation recipe from this session (starting fresh game)
+### Rotation recipes (session observations — always verify, never rely on step counts)
 
-This worked reliably in one session but may differ across sessions — always verify:
-1. Activate game with `canvas.click()`
-2. 8× Ctrl+ArrowLeft → test → ~315°
-3. 12× Ctrl+ArrowRight → test → ~0°
-4. 8× Ctrl+ArrowLeft → test → ~90°
-5. 8× Ctrl+ArrowLeft → test → ~135°
-6. 1× Ctrl+ArrowRight → test → **180° ✓**
+**Session 1** (starting from fresh game):
+1. 8× Ctrl+ArrowLeft → test → ~315°
+2. 12× Ctrl+ArrowRight → test → ~0°
+3. 8× Ctrl+ArrowLeft → test → ~90°
+4. 8× Ctrl+ArrowLeft → test → ~135°
+5. 1× Ctrl+ArrowRight → test → **180° ✓**
 
-Key lesson: use small batches (1–4 steps) once you're close, and test after each.
+**Session 2** (game already open, camera at ~315° on load):
+1. 3× Ctrl+ArrowLeft → test → **180° ✓** (direct)
+
+Key lesson: use small batches (1–4 steps) once you're close, and test after each. The starting angle varies — always test first before rotating.
 
 ---
 
@@ -263,14 +265,19 @@ vibium text  # MOVES count increments, PLAYER switches
 ## Piece Movement Notes
 
 ### Unicorn
-Moves along **3D space diagonals** — all 3 coordinates change by exactly ±1 simultaneously.
+Moves along **3D space diagonals** — all 3 coordinates change by exactly ±1 simultaneously. **This variant also includes same-level 2D diagonal movement** (level unchanged, rank±1, file±1).
+
+Evidence: From a corner/edge (Be1, De5): VALID MOVES: 3. From a center square (Cd2, Cd4): **VALID MOVES: 9**. The jump from 3 to 9 is only explained by same-level diagonal moves being included alongside pure 3D diagonals.
+
+**Starting positions**: White unicorn at **Be1** (Level B, Rank 1, File e). Black unicorn at **De5** (Level D, Rank 5, File e) — confirmed.
 
 From Be1 (Level B, Rank 1, File e):
 - **Ad2** — blocked by White pawn at initial setup (Level A, Rank 2 has pawns on all files)
 - **Cd2** — confirmed valid ✓ (Level C, Rank 2, File d)
-- The game shows **VALID MOVES: 3** from Be1, suggesting a 3rd destination exists — possibly Bd2 (same-level 2D diagonal, staying on Level B). This variant's unicorn may include same-level diagonal movement.
 
-When planning a unicorn move: verify target is empty. If confirmation re-selects a friendly piece, try an alternative square.
+**Capture confirmed**: Black unicorn Cd4 → De3 captures White unicorn at De3 (Level+1, Rank-1, File+1 = all 3 coords ±1 ✓).
+
+When planning a unicorn move: verify target is empty (or is an opponent piece to capture). If confirmation re-selects a friendly piece, try an alternative square.
 
 ### Queen
 Moves like a standard 3D queen — straight lines along any axis and diagonals in any plane, including cross-level diagonals.
@@ -307,11 +314,42 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 3. 4× ArrowUp in separate evals (rank 5→1)
 4. Confirm
 
+**Black pawn: Ed4 → Ed3** (Level E pawn, VALID MOVES: 1)
+1. Navigate to E,4,d
+2. Select + ArrowUp (rank−1)
+3. Confirm
+
+**Black pawn: Dd4 → Dd3** (Level D pawn, VALID MOVES: 2 — cross-level advance option exists)
+1. Navigate to D,4,d
+2. Select + ArrowUp (rank−1)
+3. Confirm (moves to D,3,d as expected)
+
+**Black unicorn: De5 → Cd4** (confirmed starting position)
+1. Navigate to D,5,e
+2. Select + PageDown (level D→C)
+3. ArrowUp (rank 5→4) in separate eval
+4. ArrowRight (file e→d) in separate eval
+5. Confirm
+
+**White unicorn: Cd2 → De3** (aggressive push into Black's Level D)
+1. Navigate to C,2,d
+2. Select + PageUp (level C→D)
+3. ArrowDown (rank 2→3) in separate eval
+4. ArrowLeft (file d→e) in separate eval
+5. Confirm
+
+**Black unicorn capture: Cd4 → De3** (captures White unicorn)
+1. Navigate to C,4,d
+2. Select + PageUp (level C→D)
+3. ArrowUp (rank 4→3) in separate eval
+4. ArrowLeft (file d→e) in separate eval
+5. Confirm — captures opponent piece, MOVES increments
+
 ---
 
 ## Key Gotchas
 
-1. **"GAME READY" splash after NEW GAME** — requires `canvas.click()` via eval to activate; `vibium click` on the canvas fails.
+1. **"GAME READY" splash after NEW GAME** — `vibium click` on canvas fails ("element is obscured"). `canvas.click()` via eval may return null without effect. Use `canvas.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — reliably returns `true` and dismisses the splash.
 
 2. **Camera rotation is non-deterministic** — the rotation state persists or varies across sessions. Always verify by testing ArrowUp movement, not by counting steps.
 
@@ -346,7 +384,7 @@ vibium go https://testtrack.org/3d-chess && vibium sleep 1500
 
 # Start game
 vibium find text "NEW GAME" && vibium click @e1 && vibium sleep 800
-vibium eval 'document.querySelector("canvas").click()' && vibium sleep 800
+vibium eval 'document.querySelector("canvas").dispatchEvent(new MouseEvent("click",{"bubbles":true,"cancelable":true,"view":window}))' && vibium sleep 800
 
 # Enable auto-promote to skip promotion dialogs
 vibium eval '(function(){ var b = Array.from(document.querySelectorAll("button")).find(function(x){return x.textContent.trim()==="OFF";}); if(b) b.click(); })()'
