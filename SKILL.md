@@ -18,7 +18,7 @@ vibium go https://testtrack.org/3d-chess
 vibium find text "NEW GAME"
 vibium click @e1
 vibium sleep 500
-vibium screenshot -o /Users/lanabegunova/Pictures/Vibium/chess.png
+vibium screenshot -o ~/Pictures/Vibium/chess.png
 ```
 
 **Critical**: Always start via the "NEW GAME" button. Clicking directly on the canvas is unreliable and may deactivate the game.
@@ -268,14 +268,13 @@ vibium eval "const c=document.querySelector('canvas');c.focus();['keydown','keyu
 vibium sleep 500
 vibium text  # MOVES: 1, PLAYER: BLACK
 
-vibium screenshot -o /Users/lanabegunova/Pictures/Vibium/chess-white-move.png
+vibium screenshot -o ~/Pictures/Vibium/chess-white-move.png
 ```
 
 ---
 
 ## Screenshots
 
-Save screenshots to `/Users/lanabegunova/Pictures/Vibium/` for consistency:
 ```sh
-vibium screenshot -o /Users/lanabegunova/Pictures/Vibium/chess-state.png
+vibium screenshot -o ~/Pictures/Vibium/chess-state.png
 ```
