@@ -82,7 +82,7 @@ When a piece is selected, the CURSOR section disappears and is replaced by SELEC
 
 **Critical constraints**:
 - `vibium press Space canvas` does NOT reliably trigger piece selection — use JS dispatch
-- `vibium press <key> canvas` between select and navigate will deselect the piece — all movement keys after selection must also be JS dispatch
+- `vibium press <key> canvas` after selecting a piece deselects it — **every** navigation key after selection must use JS dispatch via `vibium eval`
 - Modifier+key combos like `Ctrl+Right` cannot be sent via `vibium press` at all
 
 ---
@@ -164,7 +164,7 @@ vibium press ArrowRight canvas  # file-1 (toward file a)
 
 Always verify with `vibium text`.
 
-### 2. Select + navigate to destination (one eval, one setTimeout)
+### 2. Select + first navigation key (one eval with setTimeout)
 
 **This is the critical pattern.** Select and the first navigation key must happen in the same JS execution to keep canvas focus:
 
@@ -181,13 +181,19 @@ Replace `ArrowDown`/`keyCode:40` with the correct direction key:
 | ArrowDown | `ArrowDown` | 40 |
 | ArrowLeft | `ArrowLeft` | 37 |
 | ArrowRight | `ArrowRight` | 39 |
+| PageUp | `PageUp` | 33 |
+| PageDown | `PageDown` | 34 |
 
-For a level change (PageUp/PageDown) instead of an arrow:
+### 2b. Additional navigation keys (each in its own eval)
+
+Every key after the first also requires `vibium eval` with `focus()`. Use one eval per key:
+
 ```sh
-vibium eval 'document.querySelector("canvas").focus(); ["keydown","keyup"].forEach(function(t){document.querySelector("canvas").dispatchEvent(new KeyboardEvent(t,{"key":" ","code":"Space","keyCode":32,"which":32,"bubbles":true,"cancelable":true}))}); setTimeout(function(){document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"PageDown","code":"PageDown","keyCode":34,"bubbles":true}))},100); "dispatched"'
+vibium eval 'document.querySelector("canvas").focus(); setTimeout(function(){document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"ArrowRight","code":"ArrowRight","keyCode":39,"bubbles":true}))},100); "nav"'
+vibium sleep 400
 ```
 
-If the selection disappears after this eval, the destination was not a valid move. Navigate cursor back to the piece and try a different direction.
+Check selection is still active after each key if uncertain. If SELECTION disappears, the cursor landed on an invalid destination — navigate back to the piece and try again.
 
 ### 3. Confirm the move
 
@@ -196,6 +202,20 @@ vibium eval 'document.querySelector("canvas").focus(); ["keydown","keyup"].forEa
 vibium sleep 500
 vibium text  # MOVES count should increment, PLAYER should switch
 ```
+
+**Watch out**: if the confirm Space lands on a square occupied by a friendly piece, that piece gets selected instead of the move executing. MOVES count will NOT increment. Deselect (Escape) and start over — but note that Escape teleports the cursor to center (Level C, Rank 3, File c).
+
+---
+
+## Piece Movement Notes
+
+### Unicorn
+Moves along **space diagonals** — all 3 coordinates (level, rank, file) change by exactly ±1 simultaneously. Example valid moves from Be1: Ad2 (level-1, rank+1, file-1), Cd2 (level+1, rank+1, file-1). Cannot move to a square occupied by a friendly piece.
+
+When planning a unicorn move, verify the target square is empty. Use the select+navigate+confirm pattern, but be aware that if the destination is blocked by a friendly piece, the confirm will re-select that piece instead of moving.
+
+### Rooks
+Move along straight lines (rank, file, or level only — one axis at a time). May have limited valid moves if blocked by own pawns on adjacent squares.
 
 ---
 
@@ -211,15 +231,22 @@ vibium text  # MOVES count should increment, PLAYER should switch
 2. Select + ArrowUp (rank-1): `key:"ArrowUp", keyCode:38`
 3. Confirm with Space
 
+**White: Be1 → Ad2** (unicorn developing move — all 3 coords change by 1)
+1. Navigate cursor to Level B, Rank 1, File e
+2. Select + PageDown (level B→A) in one eval
+3. ArrowDown (rank 1→2) in separate eval
+4. ArrowRight (file e→d) in separate eval
+5. Confirm with Space (requires Ad2 to be empty)
+
 ---
 
 ## Key Gotchas
 
-1. **Cursor starts at Level C (center)**, not Level E. To reach Level A press PageDown **2 times**; to reach Level E press PageUp **2 times**.
+1. **Cursor starts at Level C (center)**, not Level E. From center: Level A = 2× PageDown, Level E = 2× PageUp. From Level E to Level A = 4× PageDown. Always count from your current level.
 
 2. **`vibium press Space canvas` does not work** for piece selection — use JS dispatch.
 
-3. **`vibium press <key> canvas` deselects the piece** when used after selection. The canvas loses focus between separate vibium commands. Solution: chain select + navigate in one `vibium eval` using `setTimeout`.
+3. **`vibium press <key> canvas` after selection deselects the piece** — the canvas loses focus between vibium commands. Every key after selection (not just the first) must use `vibium eval` with `canvas.focus()`. Pattern: one eval per key, each starting with `document.querySelector("canvas").focus(); setTimeout(dispatch, 100)`.
 
 4. **No top-level `const`/`let`/`var` in vibium eval** — they cause a "script exception". Use direct method chains or wrap everything in an IIFE.
 
@@ -229,15 +256,17 @@ vibium text  # MOVES count should increment, PLAYER should switch
 
 7. **Parity trap at 135°**: diagonal movement means only squares where `(rank+file)` has same parity as start are reachable. Fix: rotate camera until ArrowUp changes only rank.
 
-8. **After selection, cursor moves freely to any square** — NOT restricted to valid moves. Landing on an invalid destination deselects the piece. If selection disappears after the select+navigate eval, the move was invalid.
+8. **After selection, cursor moves freely to any square** — NOT restricted to valid moves. The cursor does NOT deselect when passing through invalid squares. Only pressing Space (confirm) on an invalid destination deselects. Check `vibium text` before confirming.
 
-9. **When a piece is selected, the CURSOR section disappears** from `vibium text` output — the POSITION field under SELECTION shows the piece location, not the cursor.
+9. **Confirming on a friendly piece re-selects it instead of moving** — if Space is pressed to confirm a move and the cursor is on a square occupied by your own piece, that piece gets selected and MOVES does NOT increment. Deselect with Escape and start over (but see gotcha #10).
 
-10. **Clicking the canvas resets the game** if you click outside the active board area. Use "NEW GAME" button or key `N`.
+10. **Escape teleports cursor to Level C, Rank 3, File c** — pressing Escape to deselect jumps the cursor to center regardless of where it was. Navigate back to the target square after deselecting.
 
-11. **React fiber state traversal** returns 'not found' — the game state structure may have changed. Rely on `vibium text` for game state.
+11. **When a piece is selected, the CURSOR section disappears** from `vibium text` output — the POSITION field under SELECTION shows the piece location, not the cursor position.
 
-12. **React fiber key** is dynamically named. Always look it up with `Object.keys(canvas).find(k => k.startsWith("__reactFiber"))` — don't hardcode it.
+12. **Clicking the canvas resets the game** if you click outside the active board area. Use "NEW GAME" button or key `N`.
+
+13. **React fiber state traversal returns 'not found'** — the game state structure changed. Rely solely on `vibium text` for game state; do not use React fiber traversal.
 
 ---
 

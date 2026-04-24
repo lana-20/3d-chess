@@ -14,10 +14,9 @@ Claude will open the game, read board state via DOM overlay, and play moves usin
 
 The game renders on a WebGL canvas — squares are not in the DOM. Claude navigates the board using:
 
-- **`vibium press <key> canvas`** for arrow keys and level changes (PageUp/PageDown)
-- **`vibium eval`** with JS `KeyboardEvent` dispatch for Space (select/confirm) and Ctrl+Arrow (camera rotation)
+- **`vibium press <key> canvas`** for arrow keys and level changes (PageUp/PageDown) — only safe before a piece is selected
+- **`vibium eval`** with JS `KeyboardEvent` dispatch for Space (select/confirm), Ctrl+Arrow (camera rotation), and **all keys after selection**
 - **`vibium text`** to read the live status overlay (current player, cursor position, selection, valid move count)
-- **React fiber traversal** via `vibium eval` to read piece positions and valid moves directly from game state
 
 ## Board
 
@@ -41,9 +40,14 @@ Coordinates: `LevelRankFile` — e.g. `Ae2` = Level A, Rank 2, File e.
 | Default camera angle | ~135° (not 0°) — arrow keys are **diagonal** by default |
 | Cursor start | Level C, Rank 3, File c (center) — not Level E |
 | Space key | `vibium press Space canvas` doesn't work — must use JS `KeyboardEvent` dispatch |
-| Arrow keys post-selection | Move freely to **any** square, not just valid moves — landing on an invalid square deselects the piece |
-| Parity trap | At 135°, only squares where `(rank+file)` parity matches the start are reachable — rotate camera to 0° first |
+| All keys post-selection | `vibium press <key> canvas` deselects the piece — every navigation key after selection must use `vibium eval` with `canvas.focus()` |
+| Cursor moves freely | After selecting, cursor navigates to any square; deselection only happens when Space (confirm) is pressed on an invalid destination |
+| Confirm on friendly piece | If confirm Space lands on a square occupied by your own piece, it re-selects that piece instead of moving — MOVES count stays the same |
+| Escape teleports cursor | Pressing Escape to deselect jumps cursor to Level C, Rank 3, File c regardless of where it was |
+| Parity trap | At 135°, only squares where `(rank+file)` parity matches the start are reachable — rotate camera to 180° first |
 | Camera rotation | Ctrl+Arrow cannot be sent via `vibium press` — requires JS dispatch |
+| Unicorn movement | Moves along space diagonals: all 3 coords (level, rank, file) change by exactly ±1 simultaneously |
+| React fiber | Returns 'not found' — game state structure changed. Use only `vibium text` for state |
 
 ## Requirements
 
