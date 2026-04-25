@@ -33,6 +33,17 @@ Ranks:   1 → 5 (White → Black)
 
 Coordinates: `LevelRankFile` — e.g. `Ae2` = Level A, Rank 2, File e.
 
+**Starting piece layout (fully confirmed):**
+
+| File | a | b | c | d | e |
+|------|---|---|---|---|---|
+| Level B rank 1 (White) | Bishop | Unicorn | Queen | Bishop | Unicorn |
+| Level A rank 1 (White) | Rook | Knight | **King** | Knight | Rook |
+| Level E rank 5 (Black) | Rook | Knight | **King** | Knight | Rook |
+| Level D rank 5 (Black) | Bishop | Unicorn | Queen | Bishop | Unicorn |
+
+White Level A ↔ Black Level E (exact mirror). White Level B ↔ Black Level D (exact mirror). The **Queen is on Level B/D**, not Level A/E. The **King is on Level A/E at file c**.
+
 **Pawn setup**: White has pawns on Level A rank 2 AND Level B rank 2 (all files a–e). Black has pawns on Level E rank 4 AND Level D rank 4. This gives each pawn VALID MOVES: 2 at the start (same-level advance + cross-level advance).
 
 **Promotion squares**: White promotes at rank 5 on Level A (e.g. Aa5). Black promotes at rank 1 on Level E (e.g. Ea1).
@@ -52,6 +63,8 @@ Coordinates: `LevelRankFile` — e.g. `Ae2` = Level A, Rank 2, File e.
 | All keys post-selection | `vibium press <key> canvas` deselects the piece — every navigation key after selection must use `vibium eval` with `canvas.focus()` |
 | Cursor moves freely after selection | After selecting, cursor navigates to any square; deselection only happens when Space (confirm) is pressed on an invalid destination |
 | Confirm on friendly piece | Lands on own piece → that piece gets re-selected instead of moving; MOVES count stays the same |
+| Full piece layout confirmed | See Board section above for complete starting positions of all 20 pieces per side |
+| Knight movement (3D L-shape) | Changes exactly 2 of 3 coordinates (level/rank/file), magnitudes 2+1. Confirmed: Ab1→Cb2 (+2 level, +1 rank, 0 file) and Eb5→Cb4 (-2 level, -1 rank, 0 file) |
 | Unicorn starting positions | White: Be1 (Level B, Rank 1, File e). Black: **De5** (Level D, Rank 5, File e) — confirmed |
 | Unicorn Ad2 blocked at game start | Level A rank 2 has White pawns on all files — unicorn from Be1 must go to Cd2 (PageUp) not Ad2 (PageDown) |
 | Unicorn includes same-level diagonals | From corner (Be1/De5): VALID MOVES: 3. From center (Cd2/Cd4): VALID MOVES: **9** — confirms this variant's unicorn moves on same-level 2D diagonals too |

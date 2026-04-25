@@ -21,7 +21,7 @@ vibium eval 'document.querySelector("canvas").dispatchEvent(new MouseEvent("clic
 vibium text  # should show PLAYER: WHITE, MOVES: 0
 ```
 
-**Critical**: After clicking NEW GAME the game shows a "GAME READY" splash. `vibium click` on the canvas fails ("element is obscured"). `canvas.click()` via eval may return null without effect. Use `dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — this reliably returns `true` and dismisses the splash.
+**Critical**: After clicking NEW GAME the game shows a "GAME READY" splash. `vibium click` on the canvas fails ("element is obscured"). `canvas.click()` via eval may return null without effect. Use `dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` — this reliably returns `true`. **Sometimes two calls are needed**: the first call may return `true` but leave the splash up if the game isn't fully initialized. Call it a second time with 800ms+ sleep and it will activate. Always verify with `vibium text` that PLAYER/MOVES are visible before proceeding.
 
 ---
 
@@ -34,7 +34,25 @@ vibium text  # should show PLAYER: WHITE, MOVES: 0
 
 **White starts on Levels A–B. Black starts on Levels D–E.**
 
-### Initial pawn setup (confirmed)
+### Initial piece setup (fully confirmed)
+
+```
+Level B rank 1 (White):  Ba1=Bishop  Bb1=Unicorn  Bc1=Queen   Bd1=Bishop  Be1=Unicorn
+Level A rank 1 (White):  Aa1=Rook    Ab1=Knight   Ac1=King    Ad1=Knight  Ae1=Rook
+Level A rank 2 (White):  Aa2=Pawn    Ab2=Pawn     Ac2=Pawn    Ad2=Pawn    Ae2=Pawn
+Level B rank 2 (White):  Ba2=Pawn    Bb2=Pawn     Bc2=Pawn    Bd2=Pawn    Be2=Pawn
+
+Level E rank 4 (Black):  Ea4=Pawn    Eb4=Pawn     Ec4=Pawn    Ed4=Pawn    Ee4=Pawn
+Level D rank 4 (Black):  Da4=Pawn    Db4=Pawn     Dc4=Pawn    Dd4=Pawn    De4=Pawn
+Level E rank 5 (Black):  Ea5=Rook    Eb5=Knight   Ec5=King    Ed5=Knight  Ee5=Rook
+Level D rank 5 (Black):  Da5=Bishop  Db5=Unicorn  Dc5=Queen   Dd5=Bishop  De5=Unicorn
+```
+
+White Level A rank 1 ↔ Black Level E rank 5 (exact mirror).  
+White Level B rank 1 ↔ Black Level D rank 5 (exact mirror).  
+The Queen is NOT on Level A — it's on Level B (White: Bc1, Black: Dc5).
+
+### Initial pawn setup
 - White: Level A Rank 2 (files a–e) **and** Level B Rank 2 (files a–e)
 - Black: Level E Rank 4 (files a–e) **and** Level D Rank 4 (files a–e)
 
@@ -283,6 +301,15 @@ When planning a unicorn move: verify target is empty (or is an opponent piece to
 Moves like a standard 3D queen — straight lines along any axis and diagonals in any plane, including cross-level diagonals.
 
 Confirmed: Aa5 → Ea1 is valid (Level+4, Rank-4, File constant = diagonal across all 5 levels). Navigate by combining 4× PageUp + 4× ArrowUp with the Queen selected.
+
+### Knight
+Moves in a 3D L-shape: changes exactly **2 of the 3 coordinates** (level, rank, file), with magnitudes **2+1** in the changed dimensions. The third coordinate stays fixed.
+
+Confirmed moves:
+- Ab1 → Cb2: level+2, rank+1, file=0 ✓ (White knight opening)
+- Eb5 → Cb4: level-2, rank-1, file=0 ✓ (Black knight mirror)
+
+Other valid jumps from a knight at (L, R, F): any combination where exactly one of level/rank/file stays fixed, and the other two change by 2+1 (or 1+2). This gives up to 16 possible squares (8 directions × 2 axis pairs), minus those off the board or occupied by friendly pieces. Confirmed VALID MOVES: 5 from a corner/edge position.
 
 ### Rooks
 Move along straight lines (one axis at a time). May be blocked by own pawns early in the game.
