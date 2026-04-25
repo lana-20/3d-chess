@@ -300,7 +300,11 @@ When planning a unicorn move: verify target is empty (or is an opponent piece to
 ### Queen
 Moves like a standard 3D queen — straight lines along any axis and diagonals in any plane, including cross-level diagonals.
 
-Confirmed: Aa5 → Ea1 is valid (Level+4, Rank-4, File constant = diagonal across all 5 levels). Navigate by combining 4× PageUp + 4× ArrowUp with the Queen selected.
+Confirmed moves:
+- Aa5 → Ea1: Level+4, Rank-4, File constant = 2D diagonal across all 5 levels ✓
+- Db5 → Eb4: Level+1, Rank-1, File-1 = pure 3D space diagonal (all ±1) ✓
+
+Navigate by combining PageUp/PageDown and Arrow keys after selection.
 
 ### Knight
 Moves in a 3D L-shape: changes exactly **2 of the 3 coordinates** (level, rank, file), with magnitudes **2+1** in the changed dimensions. The third coordinate stays fixed.
@@ -309,7 +313,9 @@ Confirmed moves:
 - Ab1 → Cb2: level+2, rank+1, file=0 ✓ (White knight opening)
 - Eb5 → Cb4: level-2, rank-1, file=0 ✓ (Black knight mirror)
 
-Other valid jumps from a knight at (L, R, F): any combination where exactly one of level/rank/file stays fixed, and the other two change by 2+1 (or 1+2). This gives up to 16 possible squares (8 directions × 2 axis pairs), minus those off the board or occupied by friendly pieces. Confirmed VALID MOVES: 5 from a corner/edge position.
+Other valid jumps from a knight at (L, R, F): any combination where exactly one of level/rank/file stays fixed, and the other two change by 2+1 (or 1+2). This gives up to 16 possible squares (8 directions × 2 axis pairs), minus those off the board or occupied by friendly pieces.
+
+VALID MOVES scaling: **5 from corner/edge** (Ab1, Eb5), **14 from center** (Bd3 confirmed).
 
 ### Rooks
 Move along straight lines (one axis at a time). May be blocked by own pawns early in the game.
@@ -372,6 +378,35 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 4. ArrowLeft (file d→e) in separate eval
 5. Confirm — captures opponent piece, MOVES increments
 
+**White unicorn: Cd2 → Dc3** (level+1, rank+1, file-1 = all ±1 ✓)
+1. Navigate to C,2,d
+2. Select + PageUp (level C→D)
+3. ArrowDown (rank 2→3) in separate eval
+4. ArrowRight (file d→c) in separate eval
+5. Confirm
+
+**White unicorn: Dc3 → Eb4** (captures Black pawn, puts King at Ec5 in check via same-level diagonal)
+1. Navigate to D,3,c
+2. Select + PageUp (level D→E)
+3. ArrowDown (rank 3→4) in separate eval
+4. ArrowRight (file c→b) in separate eval
+5. Confirm — pawn captured, Black King at Ec5 checked (Eb4→Ec5 is same-level diagonal)
+
+**Black Queen: Db5 → Eb4** (3D diagonal capture, level+1, rank-1, file-1 = all ±1 ✓)
+1. Navigate to D,5,b
+2. Select + PageUp (level D→E)
+3. ArrowUp (rank 5→4) in separate eval
+4. Confirm — captures opponent piece
+
+**White Knight chain: Bd3 → Dd4 → Eb4**
+- Bd3→Dd4: level+2, rank+1, file=d ✓ (enters Black territory)
+- Dd4→Eb4: level+1, rank=4, file-2 ✓ (threatens Cc4 unicorn via level-2, file+1)
+
+**White pawn: Ab3 → Ab4** (VALID MOVES: 2 at rank 3 — cross-level option still available)
+1. Navigate to A,3,b
+2. Select + ArrowDown (rank+1)
+3. Confirm
+
 ---
 
 ## Key Gotchas
@@ -394,7 +429,7 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 
 9. **Ad2 is occupied by a White pawn** at game start — unicorn from Be1 cannot go there.
 
-10. **VALID MOVES: 2 for pawns on Level B/D** — a second valid move exists, possibly a cross-level advance. The promotion rules for Level B/D pawns are not yet confirmed.
+10. **VALID MOVES: 2 for pawns persists mid-game** — both Level B/D pawns at rank 2 AND Level A pawns at rank 3 show VALID MOVES: 2. The cross-level advance option is not a one-time starting bonus; it remains available as the pawn advances. Confirmed: White pawn at Ab3 (Level A rank 3) still has VALID MOVES: 2. Promotion rules for Level B/D pawns still unconfirmed.
 
 11. **Promotion dialog buttons** — use button index 7 (♛Queen) via `dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))`. Enable AUTO PROMOTE at game start to avoid the dialog entirely.
 

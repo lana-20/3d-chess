@@ -69,7 +69,10 @@ White Level A ↔ Black Level E (exact mirror). White Level B ↔ Black Level D 
 | Unicorn Ad2 blocked at game start | Level A rank 2 has White pawns on all files — unicorn from Be1 must go to Cd2 (PageUp) not Ad2 (PageDown) |
 | Unicorn includes same-level diagonals | From corner (Be1/De5): VALID MOVES: 3. From center (Cd2/Cd4): VALID MOVES: **9** — confirms this variant's unicorn moves on same-level 2D diagonals too |
 | Unicorn capture confirmed | Unicorn can capture opponent pieces: Black Cd4 → De3 captured White unicorn (Level+1, Rank-1, File+1 ✓) |
+| Queen 3D diagonal confirmed | Db5→Eb4 is valid (level+1, rank-1, file-1 = pure 3D space diagonal, all ±1) ✓ |
 | Queen cross-level diagonal | Aa5 → Ea1 is valid (4 levels + 4 ranks along file a = confirmed long-range diagonal capture) |
+| Pawn VALID MOVES: 2 persists mid-game | Level A pawn at rank 3 (Ab3) still has VALID MOVES: 2 — cross-level advance option is not a one-time bonus from starting rank |
+| Knight VALID MOVES: 14 from center | Confirmed at Bd3 (Level B, rank 3, file d) — center knight has maximum mobility |
 | React fiber | Returns 'not found' — use only `vibium text` for state |
 
 ## Camera Verification Pattern
