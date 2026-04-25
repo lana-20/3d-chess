@@ -282,6 +282,26 @@ vibium text  # MOVES count increments, PLAYER switches
 
 ## Piece Movement Notes
 
+### Pawn
+Pawns move and capture the same as standard 2D chess, but restricted to their own level:
+- **Straight advance**: rank±1, same level and file — blocked by any piece
+- **Diagonal capture**: rank±1, file±1, same level — captures enemy piece only (confirmed)
+- **Cross-level advance**: a second advance option that exists for some pawns (shown by VALID MOVES: 2); exact rules not yet fully confirmed
+
+**VALID MOVES count key**:
+- VALID MOVES: 1 — straight advance only (no capture available, no cross-level)
+- VALID MOVES: 2 — straight advance + cross-level advance
+- VALID MOVES: 3 — straight advance + cross-level advance + diagonal capture (enemy piece present diagonally)
+
+**Diagonal capture confirmed**: Black pawn Dd4→De3 (ΔLevel=0, Δrank=-1, Δfile=+1) captured White unicorn at De3. ✓
+
+**Direction**: White pawns advance by increasing rank; Black pawns advance by decreasing rank. At 180° camera: White advances with ArrowDown, Black with ArrowUp.
+
+**Promotion (confirmed)**:
+- White: pawn at Rank 5 on Level A promotes (e.g. Aa5)
+- Black: pawn at Rank 1 on Level E promotes (e.g. Ea1)
+- Level B/D pawns: strongly suggested to promote at rank 5 (White) / rank 1 (Black) on the same level — Black Level D pawn advanced De3→De2 heading toward De1 with VALID MOVES: 2 at each step. Not yet confirmed by auto-promote firing.
+
 ### Unicorn
 Moves along **3D space diagonals** — all 3 coordinates change by exactly ±1 simultaneously. **This variant also includes same-level 2D diagonal movement** (level unchanged, rank±1, file±1).
 
@@ -295,7 +315,19 @@ From Be1 (Level B, Rank 1, File e):
 
 **Capture confirmed**: Black unicorn Cd4 → De3 captures White unicorn at De3 (Level+1, Rank-1, File+1 = all 3 coords ±1 ✓).
 
+**VALID MOVES by position**: 3 from corner (Db5), 7 from mid-board (Cc4), 9 from center (Cd2/Cd4).
+
 When planning a unicorn move: verify target is empty (or is an opponent piece to capture). If confirmation re-selects a friendly piece, try an alternative square.
+
+### Bishop
+Moves diagonally in **any 2D plane** — two coordinates change by equal amounts per step, third stays fixed. Three plane types confirmed:
+- **Level-Rank plane** (file fixed): e.g. Cc3→Dc4 (ΔLevel+1, Δrank+1, file c fixed) ✓
+- **Level-File plane** (rank fixed): e.g. Bd1→Ce1 (ΔLevel+1, Δrank=0, Δfile-1) ✓
+- **Rank-File plane** (level fixed): e.g. Ce1→Cc3 (ΔLevel=0, Δrank+2, Δfile-2, same level) ✓
+
+**VALID MOVES by position**: 4 from Bd1 (starting, paths partially blocked), 9 from Ce1, 18–20 from Cc3 (mid-game central position).
+
+**Check example**: Bishop Cc3→Dc4 captures Black pawn AND threatens Black King at Ec5 via continued Level-Rank diagonal (Dc4→Ec5 is one more step).
 
 ### Queen
 Moves like a standard 3D queen — straight lines along any axis and diagonals in any plane, including cross-level diagonals.
@@ -303,6 +335,10 @@ Moves like a standard 3D queen — straight lines along any axis and diagonals i
 Confirmed moves:
 - Aa5 → Ea1: Level+4, Rank-4, File constant = 2D diagonal across all 5 levels ✓
 - Db5 → Eb4: Level+1, Rank-1, File-1 = pure 3D space diagonal (all ±1) ✓
+- Bc1 → De1: Level-File diagonal (rank 1 fixed), 2 steps of Level+1, File+1 ✓
+- De1 → De2: straight rank advance (ΔLevel=0, Δrank+1, Δfile=0) capturing pawn ✓
+
+**VALID MOVES by position**: 13 from Bc1 (starting, own pieces blocking), 14 from Dc5 (mid-game), 15 from De1 (mid-game).
 
 Navigate by combining PageUp/PageDown and Arrow keys after selection.
 
@@ -312,10 +348,15 @@ Moves in a 3D L-shape: changes exactly **2 of the 3 coordinates** (level, rank, 
 Confirmed moves:
 - Ab1 → Cb2: level+2, rank+1, file=0 ✓ (White knight opening)
 - Eb5 → Cb4: level-2, rank-1, file=0 ✓ (Black knight mirror)
+- Ad1 → Bd3: level+1, rank+2, file=0 ✓
+- Bd3 → Dd2: level+2, rank-1, file=0 ✓
+- Dd2 → Bd3: level-2, rank+1, file=0 ✓ (captures piece)
+- Ed5 → Dd3: level-1, rank-2, file=0 ✓
+- Dd3 → Bd2: level-2, rank-1, file=0 ✓ (captures pawn)
 
 Other valid jumps from a knight at (L, R, F): any combination where exactly one of level/rank/file stays fixed, and the other two change by 2+1 (or 1+2). This gives up to 16 possible squares (8 directions × 2 axis pairs), minus those off the board or occupied by friendly pieces.
 
-VALID MOVES scaling: **5 from corner/edge** (Ab1, Eb5), **14 from center** (Bd3 confirmed).
+**VALID MOVES scaling**: 5 from corner/edge (Ab1, Eb5), 8 from Ed5 (Black home corner), 10 from Dd2 (mid-game, some paths blocked), **14 from Bd3 center**, **15 from Dd3 center** (more than Bd3 because fewer own pieces blocking from Level D).
 
 ### Rooks
 Move along straight lines (one axis at a time). May be blocked by own pawns early in the game.
@@ -407,6 +448,95 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 2. Select + ArrowDown (rank+1)
 3. Confirm
 
+**White bishop: Bd1 → Ce1** (Level-File diagonal: ΔLevel+1, Δrank=0, Δfile-1)
+1. Navigate to B,1,d
+2. Select + PageUp (level B→C)
+3. ArrowRight (file d→c... wait: at 180° ArrowRight = file-1, so d→c) in separate eval — actually: Δfile=-1 means ArrowRight at 180°
+4. Confirm
+
+**White bishop: Ce1 → Cc3** (same-level 2-step diagonal: ΔLevel=0, Δrank+2, Δfile-2)
+1. Navigate to C,1,e
+2. Select + ArrowDown (rank 1→2) — note ArrowDown at 180° = rank+1
+3. ArrowRight (file e→d) in separate eval
+4. ArrowDown (rank 2→3) in separate eval
+5. ArrowRight (file d→c) in separate eval
+6. Confirm
+
+**Black pawn diagonal capture: Dd4 → De3** (rank-1, file+1, same level — captures enemy piece)
+1. Navigate to D,4,d
+2. Select + ArrowUp (rank-1 = rank 4→3) + ArrowLeft (file d→e) — note: combined Space+ArrowUp in one eval, then ArrowLeft separately
+3. Confirm — pawn captures whatever is at De3
+
+**White Queen: Bc1 → De1** (Level-File 2-step diagonal: rank 1 fixed, Level+1, File+1 per step)
+1. Navigate to B,1,c
+2. Select + PageUp (level B→C, rank and file stay)
+3. PageUp in separate eval (level C→D)
+4. 2× ArrowLeft in separate evals (file c→d→e)
+5. Confirm
+
+**White Queen: De1 → De2** (straight rank advance, captures Black pawn at De2)
+1. Navigate to D,1,e
+2. Select + ArrowDown (rank 1→2)
+3. Confirm — pawn captured
+
+**White bishop: Cc3 → Dc4** (Level-Rank diagonal: ΔLevel+1, Δrank+1, Δfile=0 — captures pawn, threatens King at Ec5)
+1. Navigate to C,3,c
+2. Select + PageUp (level C→D)
+3. ArrowDown (rank 3→4) in separate eval
+4. Confirm — pawn captured; Black King at Ec5 is now in check via continued diagonal
+
+**Black Queen: Dc5 → Dc4** (straight rank move: Δrank-1, level D, file c fixed — captures bishop)
+1. Navigate to D,5,c
+2. Select + ArrowUp (rank 5→4)
+3. Confirm
+
+**White knight: Ad1 → Bd3** (level+1, rank+2, file fixed)
+1. Navigate to A,1,d
+2. Select + PageUp (level A→B)
+3. 2× ArrowDown in separate evals (rank 1→2→3)
+4. Confirm
+
+**White knight: Bd3 → Dd2** (level+2, rank-1, file fixed — retreating to safety)
+1. Navigate to B,3,d
+2. Select + PageUp (level B→C)
+3. PageUp in separate eval (level C→D)
+4. ArrowUp (rank 3→2) in separate eval
+5. Confirm
+
+**White knight: Dd2 → Bd3** (level-2, rank+1, file fixed — captures Black unicorn at Bd3)
+1. Navigate to D,2,d
+2. Select + PageDown (level D→C)
+3. PageDown in separate eval (level C→B)
+4. ArrowDown (rank 2→3) in separate eval
+5. Confirm
+
+**Black unicorn: Db5 → Cc4** (3D diagonal: ΔLevel-1, Δrank-1, Δfile+1)
+1. Navigate to D,5,b
+2. Select + PageDown (level D→C)
+3. ArrowUp (rank 5→4) in separate eval
+4. ArrowLeft (file b→c) in separate eval
+5. Confirm
+
+**Black unicorn: Cc4 → Bd3** (3D diagonal: ΔLevel-1, Δrank-1, Δfile-1 — threatens multiple White pawns)
+1. Navigate to C,4,c
+2. Select + PageDown (level C→B)
+3. ArrowUp (rank 4→3) in separate eval
+4. ArrowLeft (file c→d) in separate eval
+5. Confirm
+
+**Black knight: Ed5 → Dd3** (level-1, rank-2, file fixed)
+1. Navigate to E,5,d
+2. Select + PageDown (level E→D)
+3. 2× ArrowUp in separate evals (rank 5→3)
+4. Confirm — threatens White Queen at De1 via Dd3→De1 (Δrank-2, Δfile+1)
+
+**Black knight: Dd3 → Bd2** (level-2, rank-1, file fixed — captures White pawn at Bd2)
+1. Navigate to D,3,d
+2. Select + PageDown (level D→C)
+3. PageDown in separate eval (level C→B)
+4. ArrowUp (rank 3→2) in separate eval
+5. Confirm
+
 ---
 
 ## Key Gotchas
@@ -436,6 +566,10 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 12. **React fiber returns 'not found'** — use only `vibium text` for game state.
 
 13. **Clicking the canvas outside the board** may reset the game. Use NEW GAME button or key `N`.
+
+14. **Piece on C,3,c causes Escape auto-select loop** — Escape always resets the cursor to C,3,c. If any piece occupies C,3,c at that moment, the cursor lands on it and the piece appears selected (or gets selected on the first `vibium press` key after Escape). Workaround: after Escape, immediately dispatch an ArrowUp via `vibium eval` to move the cursor off C,3,c before continuing navigation.
+
+15. **Don't mix `vibium press` and `vibium eval` in the same navigation sequence** — mixing causes cursor confusion: the position from the eval call may not carry through to the subsequent `vibium press`, causing the cursor to end up somewhere unexpected (often back at C,3,c or on a nearby piece). Rule: once you've used eval for any navigation step in a sequence, use eval for all remaining steps.
 
 ---
 

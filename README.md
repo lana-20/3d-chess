@@ -71,8 +71,17 @@ White Level A ↔ Black Level E (exact mirror). White Level B ↔ Black Level D 
 | Unicorn capture confirmed | Unicorn can capture opponent pieces: Black Cd4 → De3 captured White unicorn (Level+1, Rank-1, File+1 ✓) |
 | Queen 3D diagonal confirmed | Db5→Eb4 is valid (level+1, rank-1, file-1 = pure 3D space diagonal, all ±1) ✓ |
 | Queen cross-level diagonal | Aa5 → Ea1 is valid (4 levels + 4 ranks along file a = confirmed long-range diagonal capture) |
+| Queen Level-File diagonal confirmed | Bc1→De1 valid (rank 1 fixed, 2 steps of Level+1, File+1) — queen uses Level-File 2D diagonal plane ✓ |
+| Pawn diagonal capture confirmed | Black pawn Dd4→De3 (rank-1, file+1, same level) captures White unicorn — same as standard chess diagonal pawn capture ✓ |
+| Pawn VALID MOVES: 3 = capture available | Dd4 showed VALID MOVES: 3 (straight advance + cross-level advance + diagonal capture) vs. VALID MOVES: 2 with no capture target |
 | Pawn VALID MOVES: 2 persists mid-game | Level A pawn at rank 3 (Ab3) still has VALID MOVES: 2 — cross-level advance option is not a one-time bonus from starting rank |
+| Bishop movement fully confirmed | Three 2D plane types: Level-Rank (file fixed), Level-File (rank fixed), Rank-File (level fixed). VALID MOVES: 18–20 from Cc3 |
+| Bishop Level-Rank diagonal check | Cc3→Dc4 (ΔL+1, Δr+1, file c fixed) captures pawn AND checks Black King at Ec5 via same diagonal direction ✓ |
 | Knight VALID MOVES: 14 from center | Confirmed at Bd3 (Level B, rank 3, file d) — center knight has maximum mobility |
+| Knight VALID MOVES: 15 from Dd3 | Level D center position gives 15 valid moves — more than 14 from Bd3 because fewer own pieces block paths from Level D |
+| Knight VALID MOVES: 8 from Ed5 | Confirmed from Black home corner (Level E, rank 5, file d) |
+| Piece on C,3,c causes Escape loop | Escape resets cursor to C,3,c; if a piece is there it auto-selects. Use eval ArrowUp immediately after Escape to move off |
+| Mixing vibium press + eval causes cursor confusion | Mixing `vibium press` arrow keys with `vibium eval` navigation causes unexpected cursor jumps. Use eval-only throughout any sequence |
 | React fiber | Returns 'not found' — use only `vibium text` for state |
 
 ## Camera Verification Pattern
