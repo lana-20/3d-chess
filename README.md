@@ -14,7 +14,7 @@ Claude will open the game, read board state via DOM overlay, and play moves usin
 
 The game renders on a WebGL canvas — squares are not in the DOM. Claude navigates the board using:
 
-- **`vibium press <key> canvas`** for arrow keys and level changes (PageUp/PageDown) — only safe before a piece is selected
+- **`vibium eval`** with JS `KeyboardEvent` dispatch for **all keys** — including pre-selection navigation. `vibium press <key> canvas` is unreliable in extended play: it triggers "element is obscured" after PageDown in mid-game, which can cause the game to reset to MOVES: 0
 - **`vibium eval`** with JS `KeyboardEvent` dispatch for Space (select/confirm), Ctrl+Arrow (camera rotation), and **all keys after selection**
 - **`vibium text`** to read the live status overlay (current player, cursor position, selection, valid move count)
 
@@ -82,6 +82,12 @@ White Level A ↔ Black Level E (exact mirror). White Level B ↔ Black Level D 
 | Knight VALID MOVES: 8 from Ed5 | Confirmed from Black home corner (Level E, rank 5, file d) |
 | Piece on C,3,c causes Escape loop | Escape resets cursor to C,3,c; if a piece is there it auto-selects. Use eval ArrowUp immediately after Escape to move off |
 | Mixing vibium press + eval causes cursor confusion | Mixing `vibium press` arrow keys with `vibium eval` navigation causes unexpected cursor jumps. Use eval-only throughout any sequence |
+| `vibium press` unsafe even pre-selection | `vibium press PageDown canvas` works at low MOVES but fails with "element is obscured" in mid-game, causing game reset to MOVES: 0. Use `vibium eval` KeyboardEvent dispatch for every key press |
+| Bishop Bd1→Ce1 is Δfile+1 not -1 | Confirmed: select Bd1, PageUp (→C,1,d), ArrowLeft (d→e = file+1), confirm → cursor lands at C,1,e. Previous docs had wrong sign and wrong key (ArrowRight). |
+| Bishop sliding blocked by friendly pieces | Ce1→Cc3 passes through Cd2. If own unicorn is at Cd2 the move fails silently (MOVES count stays the same). Clear the path before moving the bishop. |
+| Knight Bd3→Dd4 confirmed | level+2, rank+1, file d fixed — enters Black territory. VALID MOVES: 13 from Bd3 in mid-game (fewer than theoretical max due to own pieces) |
+| Queen same-level diagonal capture | Dc5→Dd4 (ΔLevel=0, Δrank-1, Δfile+1) is a valid queen move that captures a piece on the same level ✓ |
+| Camera session 3 | Fresh game starts at ~315°; only 4× Ctrl+ArrowLeft reaches 180° |
 | React fiber | Returns 'not found' — use only `vibium text` for state |
 
 ## Camera Verification Pattern

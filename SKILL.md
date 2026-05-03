@@ -203,6 +203,10 @@ vibium text
 **Session 2** (game already open, camera at ~315° on load):
 1. 3× Ctrl+ArrowLeft → test → **180° ✓** (direct)
 
+**Session 3** (fresh game, "GAME READY" just dismissed):
+1. Test: ArrowUp → rank+1, file+1 → ~315°
+2. 4× Ctrl+ArrowLeft → test: ArrowUp → rank-1, file unchanged → **180° ✓** (only 4 steps)
+
 Key lesson: use small batches (1–4 steps) once you're close, and test after each. The starting angle varies — always test first before rotating.
 
 ---
@@ -219,17 +223,16 @@ Use this as a reliable cursor reset point before navigating to a known position.
 
 ### 1. Navigate to the piece (no selection active)
 
-`vibium press` is safe before selection.
+**Use `vibium eval` for all key dispatch** — `vibium press <key> canvas` is unreliable even before selection. In extended play it triggers "element is obscured" errors and can cause an unexpected game reset (MOVES back to 0). Always dispatch via eval:
 
 ```sh
-# From center C,3,c: Level A = 2× PageDown, Level E = 4× PageUp from A (or 2× from C)
-vibium press PageDown canvas && vibium sleep 200
-vibium press PageDown canvas && vibium sleep 200
-# At 180° camera:
-vibium press ArrowDown canvas   # rank+1
-vibium press ArrowUp canvas     # rank-1
-vibium press ArrowLeft canvas   # file+1 (toward e)
-vibium press ArrowRight canvas  # file-1 (toward a)
+# PageDown (level toward A):
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"PageDown","code":"PageDown","keyCode":34,"bubbles":true}))' && vibium sleep 200
+# PageUp (level toward E):
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"PageUp","code":"PageUp","keyCode":33,"bubbles":true}))' && vibium sleep 200
+# Arrow keys (at 180° camera):
+# ArrowDown = rank+1, ArrowUp = rank-1, ArrowLeft = file+1, ArrowRight = file-1
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"ArrowUp","code":"ArrowUp","keyCode":38,"bubbles":true}))' && vibium sleep 200
 ```
 
 Always verify with `vibium text` before selecting.
@@ -322,7 +325,7 @@ When planning a unicorn move: verify target is empty (or is an opponent piece to
 ### Bishop
 Moves diagonally in **any 2D plane** — two coordinates change by equal amounts per step, third stays fixed. Three plane types confirmed:
 - **Level-Rank plane** (file fixed): e.g. Cc3→Dc4 (ΔLevel+1, Δrank+1, file c fixed) ✓
-- **Level-File plane** (rank fixed): e.g. Bd1→Ce1 (ΔLevel+1, Δrank=0, Δfile-1) ✓
+- **Level-File plane** (rank fixed): e.g. Bd1→Ce1 (ΔLevel+1, Δrank=0, Δfile+1) ✓
 - **Rank-File plane** (level fixed): e.g. Ce1→Cc3 (ΔLevel=0, Δrank+2, Δfile-2, same level) ✓
 
 **VALID MOVES by position**: 4 from Bd1 (starting, paths partially blocked), 9 from Ce1, 18–20 from Cc3 (mid-game central position).
@@ -448,11 +451,11 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 2. Select + ArrowDown (rank+1)
 3. Confirm
 
-**White bishop: Bd1 → Ce1** (Level-File diagonal: ΔLevel+1, Δrank=0, Δfile-1)
+**White bishop: Bd1 → Ce1** (Level-File diagonal: ΔLevel+1, Δrank=0, Δfile+1)
 1. Navigate to B,1,d
-2. Select + PageUp (level B→C)
-3. ArrowRight (file d→c... wait: at 180° ArrowRight = file-1, so d→c) in separate eval — actually: Δfile=-1 means ArrowRight at 180°
-4. Confirm
+2. Select + PageUp (level B→C) — cursor now at C,1,d
+3. ArrowLeft (file d→e at 180° = file+1) in separate eval
+4. Confirm — cursor ends at C,1,e = Ce1 ✓
 
 **White bishop: Ce1 → Cc3** (same-level 2-step diagonal: ΔLevel=0, Δrank+2, Δfile-2)
 1. Navigate to C,1,e
@@ -537,6 +540,19 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 4. ArrowUp (rank 3→2) in separate eval
 5. Confirm
 
+**White knight: Bd3 → Dd4** (level+2, rank+1, file fixed — enters Black territory, threatens Db5 unicorn)
+1. Navigate to B,3,d
+2. Select + PageUp (level B→C)
+3. PageUp in separate eval (level C→D)
+4. ArrowDown (rank 3→4) in separate eval
+5. Confirm — VALID MOVES: 13 from Bd3 in mid-game (slightly fewer than max due to own pieces)
+
+**Black queen: Dc5 → Dd4** (same-level diagonal capture: ΔLevel=0, Δrank-1, Δfile+1 — captures any White piece on Dd4)
+1. Navigate to D,5,c
+2. Select + ArrowUp (rank 5→4) in combined eval
+3. ArrowLeft (file c→d = file+1) in separate eval
+4. Confirm — queen captures diagonally on same level, MOVES increments
+
 ---
 
 ## Key Gotchas
@@ -571,6 +587,10 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 
 15. **Don't mix `vibium press` and `vibium eval` in the same navigation sequence** — mixing causes cursor confusion: the position from the eval call may not carry through to the subsequent `vibium press`, causing the cursor to end up somewhere unexpected (often back at C,3,c or on a nearby piece). Rule: once you've used eval for any navigation step in a sequence, use eval for all remaining steps.
 
+16. **`vibium press <key> canvas` is unreliable even before selection** — in extended play (MOVES 10+), `vibium press PageDown canvas` can cause "element is obscured" on the very next `vibium press ArrowUp canvas`, which then causes the game to reset to MOVES: 0. Use `vibium eval` with KeyboardEvent dispatch for **all** key presses — pre-selection and post-selection alike.
+
+17. **Bishop sliding is blocked by friendly pieces on the diagonal** — e.g. Ce1→Cc3 (Rank-File diagonal) passes through Cd2. If your own unicorn is at Cd2, the bishop move is invalid (MOVES count won't increment). Clear or reroute before committing the bishop.
+
 ---
 
 ## Full Game Loop (Proven Pattern)
@@ -592,10 +612,11 @@ vibium eval 'document.querySelector("canvas").focus(); document.querySelector("c
 # ... repeat and test until ArrowUp gives rank-1, file unchanged
 
 # === WHITE'S TURN ===
-vibium press PageDown canvas && vibium sleep 200  # C → B
-vibium press PageDown canvas && vibium sleep 200  # B → A
-vibium press ArrowRight canvas && vibium sleep 200  # file c → b
-vibium press ArrowUp canvas && vibium sleep 200     # rank 3 → 2
+# Use eval for ALL key dispatch (vibium press can fail mid-game with "element is obscured")
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"PageDown","code":"PageDown","keyCode":34,"bubbles":true}))' && vibium sleep 200  # C → B
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"PageDown","code":"PageDown","keyCode":34,"bubbles":true}))' && vibium sleep 200  # B → A
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"ArrowRight","code":"ArrowRight","keyCode":39,"bubbles":true}))' && vibium sleep 200  # file c → b
+vibium eval 'document.querySelector("canvas").focus(); document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"ArrowUp","code":"ArrowUp","keyCode":38,"bubbles":true}))' && vibium sleep 200  # rank 3 → 2
 vibium text  # verify CURSOR: LEVEL A, RANK 2, FILE b
 
 vibium eval 'document.querySelector("canvas").focus(); ["keydown","keyup"].forEach(function(t){document.querySelector("canvas").dispatchEvent(new KeyboardEvent(t,{"key":" ","code":"Space","keyCode":32,"which":32,"bubbles":true,"cancelable":true}))}); setTimeout(function(){document.querySelector("canvas").dispatchEvent(new KeyboardEvent("keydown",{"key":"ArrowDown","code":"ArrowDown","keyCode":40,"bubbles":true}))},100); "dispatched"'
