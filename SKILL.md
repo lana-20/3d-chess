@@ -591,6 +591,12 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 
 17. **Bishop sliding is blocked by friendly pieces on the diagonal** — e.g. Ce1→Cc3 (Rank-File diagonal) passes through Cd2. If your own unicorn is at Cd2, the bishop move is invalid (MOVES count won't increment). Clear or reroute before committing the bishop.
 
+18. **Game resets to MOVES: 0 can occur even with pure eval navigation** — a reset was observed at MOVES: 12 mid-game even when all key dispatch used `vibium eval` KeyboardEvent (no `vibium press` at all). The exact trigger is unknown; suspected causes include: PageDown+ArrowUp combination at certain board positions, timing/focus side effects, or a bash `for` loop reducing sleep precision. **Mitigation**: always run `vibium text` after each move and after any multi-key navigation sequence to catch a reset before submitting the next move. If GAME READY appears, dismiss with `canvas.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}))` and verify AUTO PROMOTE is still ON.
+
+19. **AUTO PROMOTE state persists across game resets** — when the game resets (MOVES back to 0 with GAME READY splash), the AUTO PROMOTE toggle remains as it was. No need to re-enable after a reset. Confirm with `vibium text` before re-enabling to avoid toggling it OFF.
+
+20. **`vibium text` includes "MISSION TIME: HH:MM:SS UTC"** — this is a real-world UTC clock, not a game timer or countdown. It does not indicate a time limit.
+
 ---
 
 ## Full Game Loop (Proven Pattern)

@@ -89,6 +89,9 @@ White Level A ↔ Black Level E (exact mirror). White Level B ↔ Black Level D 
 | Queen same-level diagonal capture | Dc5→Dd4 (ΔLevel=0, Δrank-1, Δfile+1) is a valid queen move that captures a piece on the same level ✓ |
 | Camera session 3 | Fresh game starts at ~315°; only 4× Ctrl+ArrowLeft reaches 180° |
 | React fiber | Returns 'not found' — use only `vibium text` for state |
+| Game resets with eval-only too | Reset to MOVES: 0 observed at MOVES: 12 with pure eval navigation — no `vibium press` involved. Root cause unknown. Always run `vibium text` after each navigation sequence to detect resets early. |
+| AUTO PROMOTE persists across resets | After a game reset, AUTO PROMOTE stays ON — no re-enable needed. Check before toggling to avoid accidentally turning it OFF. |
+| MISSION TIME in vibium text | "MISSION TIME: HH:MM:SS UTC" is the real-world UTC clock, not a game countdown. Safe to ignore. |
 
 ## Camera Verification Pattern
 
