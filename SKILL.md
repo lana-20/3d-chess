@@ -361,6 +361,18 @@ Other valid jumps from a knight at (L, R, F): any combination where exactly one 
 
 **VALID MOVES scaling**: 5 from corner/edge (Ab1, Eb5), 8 from Ed5 (Black home corner), 10 from Dd2 (mid-game, some paths blocked), **14 from Bd3 center**, **15 from Dd3 center** (more than Bd3 because fewer own pieces blocking from Level D).
 
+**Extended capture chain (session 3 confirmed)**:
+- Eb3→Ec5: ΔLevel=0, Δrank+2, Δfile+1 ✓ (captures Black King — game continues)
+- Ec5→Cb5: ΔLevel-2, Δrank=0, Δfile-1 ✓ (captures Black Bishop)
+- Cb5→Ea5: ΔLevel+2, Δrank=0, Δfile-1 ✓ (captures Black Rook)
+- Ea5→Dc5: ΔLevel-1, Δrank=0, Δfile+2 ✓
+- Dc5→De4: ΔLevel=0, Δrank-1, Δfile+2 ✓ (captures Black Queen)
+- De4→Dc3: ΔLevel=0, Δrank-1, Δfile-2 ✓ (captures Black Knight)
+- Dc3→Ce3: ΔLevel-1, Δrank=0, Δfile+2 ✓ (captures Black Bishop)
+- Ce3→De5: ΔLevel+1, Δrank+2, Δfile=0 ✓ (captures Black Rook)
+
+A single knight traversed all 5 levels and captured 8 pieces in ~20 moves.
+
 ### Rooks
 Move along straight lines (one axis at a time). May be blocked by own pawns early in the game.
 
@@ -553,6 +565,64 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 3. ArrowLeft (file c→d = file+1) in separate eval
 4. Confirm — queen captures diagonally on same level, MOVES increments
 
+**White knight capture chain (session 3 — 8 captures across 20 moves)**
+
+**Knight: Eb3 → Ec5** (rank+2, file+1, level fixed — captures Black King; game CONTINUES)
+1. Navigate to E,3,b
+2. Select + ArrowDown (rank 3→4) in combined eval
+3. ArrowDown (rank 4→5) in separate eval
+4. ArrowLeft (file b→c) in separate eval
+5. Confirm
+
+**Knight: Ec5 → Cb5** (level-2, file-1, rank fixed — captures Black Bishop)
+1. Navigate to E,5,c
+2. Select + PageDown (level E→D) in combined eval
+3. PageDown (level D→C) in separate eval
+4. ArrowRight (file c→b) in separate eval
+5. Confirm
+
+**Knight: Cb5 → Ea5** (level+2, file-1, rank fixed — captures Black Rook)
+1. Navigate to C,5,b
+2. Select + PageUp (level C→D) in combined eval
+3. PageUp (level D→E) in separate eval
+4. ArrowRight (file b→a) in separate eval
+5. Confirm
+
+**Knight: Ea5 → Dc5** (level-1, file+2, rank fixed)
+1. Navigate to E,5,a
+2. Select + PageDown (level E→D) in combined eval
+3. ArrowLeft (file a→b) in separate eval
+4. ArrowLeft (file b→c) in separate eval
+5. Confirm
+
+**Knight: Dc5 → De4** (rank-1, file+2, level fixed — captures Black Queen)
+1. Navigate to D,5,c
+2. Select + ArrowUp (rank 5→4) in combined eval
+3. ArrowLeft (file c→d) in separate eval
+4. ArrowLeft (file d→e) in separate eval
+5. Confirm
+
+**Knight: De4 → Dc3** (rank-1, file-2, level fixed — captures Black Knight)
+1. Navigate to D,4,e
+2. Select + ArrowUp (rank 4→3) in combined eval
+3. ArrowRight (file e→d) in separate eval
+4. ArrowRight (file d→c) in separate eval
+5. Confirm
+
+**Knight: Dc3 → Ce3** (level-1, file+2, rank fixed — captures Black Bishop)
+1. Navigate to D,3,c
+2. Select + PageDown (level D→C) in combined eval
+3. ArrowLeft (file c→d) in separate eval
+4. ArrowLeft (file d→e) in separate eval
+5. Confirm
+
+**Knight: Ce3 → De5** (level+1, rank+2, file fixed — captures Black Rook)
+1. Navigate to C,3,e
+2. Select + PageUp (level C→D) in combined eval
+3. ArrowDown (rank 3→4) in separate eval
+4. ArrowDown (rank 4→5) in separate eval
+5. Confirm
+
 ---
 
 ## Key Gotchas
@@ -596,6 +666,10 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 19. **AUTO PROMOTE state persists across game resets** — when the game resets (MOVES back to 0 with GAME READY splash), the AUTO PROMOTE toggle remains as it was. No need to re-enable after a reset. Confirm with `vibium text` before re-enabling to avoid toggling it OFF.
 
 20. **`vibium text` includes "MISSION TIME: HH:MM:SS UTC"** — this is a real-world UTC clock, not a game timer or countdown. It does not indicate a time limit.
+
+21. **King capture does NOT end the game** — confirmed empirically: White knight captured Black King at Ec5 (move 13), Black knight captured White King at Ac1 (move 14), and the game continued normally. There is no checkmate, no game-over on king loss. The game is a pure piece-capture system — the goal is to capture all (or key) enemy pieces, not specifically the king.
+
+22. **Queen 3D space diagonal fails from certain positions** — Cd4→Dc5 (ΔLevel+1, Δrank+1, ΔFile-1 = all ±1, geometrically valid) was rejected by the game engine 3 consecutive times from different navigation approaches. The queen can make 3D diagonals in some cases (Db5→Eb4 ✓) but not others. Suspected engine limitation or bug. Workaround: use a straight-line queen move or verify with VALID MOVES count before committing.
 
 ---
 
