@@ -63,7 +63,7 @@ At 180° camera: White advances with **ArrowDown**, Black advances with **ArrowU
 - White: pawn at Rank 5 on **Level A** promotes (e.g. Aa5 → auto-Queen)
 - Black: pawn at Rank 1 on **Level E** promotes (e.g. Ea1 → Queen dialog / auto-Queen)
 
-Level B/D pawns — promotion rules not yet confirmed; they showed VALID MOVES: 2 at Rank 2 suggesting a cross-level advance option exists.
+Level B/D pawns promote at their own far rank — **confirmed**: Black pawn Dc2→Dc1 triggered AUTO PROMOTE and created a queen at Dc1 (game 2, move 40). By symmetry, White Level B pawn promotes at Rank 5 on Level B. Each level has its own independent promotion rank.
 
 ---
 
@@ -374,7 +374,9 @@ Other valid jumps from a knight at (L, R, F): any combination where exactly one 
 A single knight traversed all 5 levels and captured 8 pieces in ~20 moves.
 
 ### Rooks
-Move along straight lines (one axis at a time). May be blocked by own pawns early in the game.
+Move along straight lines (one axis at a time — rank, file, or level). May be blocked by own pawns early in the game.
+
+**Level slide confirmed**: Dc1→Ec1 (ΔLevel+1, rank 1, file c = straight level axis) ✓ (game 2, move 47). Rooks can slide between levels as freely as along rank or file.
 
 ---
 
@@ -670,6 +672,31 @@ Move along straight lines (one axis at a time). May be blocked by own pawns earl
 21. **King capture does NOT end the game** — confirmed empirically: White knight captured Black King at Ec5 (move 13), Black knight captured White King at Ac1 (move 14), and the game continued normally. There is no checkmate, no game-over on king loss. The game is a pure piece-capture system — the goal is to capture all (or key) enemy pieces, not specifically the king.
 
 22. **Queen 3D space diagonal fails from certain positions** — Cd4→Dc5 (ΔLevel+1, Δrank+1, ΔFile-1 = all ±1, geometrically valid) was rejected by the game engine 3 consecutive times from different navigation approaches. The queen can make 3D diagonals in some cases (Db5→Eb4 ✓) but not others. Suspected engine limitation or bug. Workaround: use a straight-line queen move or verify with VALID MOVES count before committing.
+
+23. **Level D rank 1 is a Black promotion square (confirmed)** — Black pawn at Dc2→Dc1 triggered AUTO PROMOTE and produced a queen at Dc1 (game 2, move 40). By symmetry, Level B rank 5 is a White promotion square. The promotion rule is: each pawn promotes at rank 1 (Black) or rank 5 (White) **on whichever level it's currently on**. Do not assume promotion only happens on Levels A/E.
+
+24. **The select+first-nav combined eval counts as the first navigation step** — the select eval dispatches the nav key via `setTimeout(..., 100ms)` and it fires before control returns. Any additional nav evals you dispatch afterward stack on top. For N total navigation steps, use: 1 step in the select eval + (N−1) separate evals. Using 1 in the select eval + N separate = N+1 total, causing overshoot. Example failure: intended Ea1→Ca1 (2× PageDown), sent 1 in select eval + 2 separate = 3× PageDown total → queen shot to Ba1 capturing own bishop.
+
+25. **White unicorn at Bb1 blocks queen's rank-1 file slide on Level B** — if the Bb1 unicorn is never moved, White queen at Bc1 cannot slide along file to Ba1 (rank 1, level B). The unicorn sits between them. Workaround: use a diagonal path such as Bc1→Cb2 (3D diagonal: ΔLevel+1, Δrank+1, Δfile-1), then Cb2→Ba1 (ΔLevel-1, Δrank-1, Δfile-1) in a subsequent move — or move the unicorn first.
+
+**White rook level slide: Dc1 → Ec1** (ΔLevel+1, rank 1, file c — confirms rooks slide along level axis)
+1. Navigate to D,1,c
+2. Select + PageUp (level D→E)
+3. Confirm — MOVES increments, rook now on level E threatening rank-1
+
+**White queen 3D diagonal: Bc1 → Cb2** (ΔLevel+1, Δrank+1, Δfile-1 = all ±1)
+1. Navigate to B,1,c
+2. Select queen (VALID MOVES: 16 observed from Bc1 mid-game)
+3. PageUp in separate eval (level B→C)
+4. ArrowDown in separate eval (rank 1→2)
+5. ArrowRight in separate eval (file c→b)
+6. Confirm
+
+**Black queen level slide: Ea1 → Ba1** (ΔLevel-3, rank 1, file a — sliding 3 levels straight through Da1 and Ca1)
+1. Navigate to E,1,a
+2. Select + PageDown (level E→D) — 1st step in combined eval
+3. 2× PageDown in separate evals (D→C→B)
+4. Confirm — queen captures whatever is at Ba1 (captured White bishop in game 2)
 
 ---
 
